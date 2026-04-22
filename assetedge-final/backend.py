@@ -45,7 +45,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Config ─────────────────────────────────────────────────────
-DB_PATH        = os.getenv("DB_PATH",    "assetedge.db")
+DB_PATH = os.getenv("DB_PATH", "/tmp/assetedge.db")
 JWT_SECRET     = os.getenv("JWT_SECRET", "AssetEdge2024SuperSecretKey!!")
 JWT_ALGO       = "HS256"
 JWT_HOURS      = 168
