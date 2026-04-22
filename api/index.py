@@ -1,35 +1,70 @@
+import json
 import sys
 import os
 import io
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from contextlib import redirect_stdout
 
-from assetedge_final.backend import app as flask_app
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'assetedge-final'))
+
+from backend import app
 
 def handler(request):
-    """Vercel Python handler"""
-    from flask import Request as FlaskRequest
-    from werkzeug.wrappers import Response
+    """
+    Vercel Python Serverless Function
+    Expects Vercel request format
+    """
+    # Parse path, method, headers, body
+    path = request['path']
+    method = request['method']
+    headers = request.get('headers', {})
+    body = request.get('body', '')
     
-    # Create Flask request
-    flask_req = FlaskRequest.from_environ({
-        'PATH_INFO': request.get('path', '/'),
-        'REQUEST_METHOD': request.get('method', 'GET'),
-        'HTTP_HOST': request.get('headers', {}).get('host', 'localhost'),
-        'wsgi.input': io.BytesIO(request.get('body', b'') or b''),
-        **{k.lower().replace('-', '_'): v for k, v in (request.get('headers', {}) or {}).items()}
-    })
+    # Body handling
+    if isinstance(body, str):
+        body = body.encode()
     
-    # Dispatch through Flask app
-    with flask_app.test_request_context(flask_req.path, flask_req):
-        flask_app.preprocess_request()
-        rv = flask_app.full_dispatch_request()
-        response = flask_app.make_response(rv)
+    # Create environ for Flask
+    environ = {
+        'REQUEST_METHOD': method,
+        'PATH_INFO': path,
+        'SCRIPT_NAME': '',
+        'SERVER_NAME': headers.get('host', 'localhost'),
+        'SERVER_PORT': '443' if headers.get('x-forwarded-proto', 'http') == 'https' else '80',
+        'wsgi.url_scheme': headers.get('x-forwarded-proto', 'http'),
+        'wsgi.input': io.BytesIO(body),
+        'CONTENT_LENGTH': str(len(body)),
+        'CONTENT_TYPE': headers.get('content-type', ''),
+    }
     
-    return {
+    # Add headers
+    for k, v in headers.items():
+        key = 'HTTP_' + k.upper().replace('-', '_')
+        environ[key] = v
+    
+    # Flask dispatch
+    with app.test_request_context(path, environ):
+        try:
+            rv = app.full_dispatch_request()
+            response = app.response_class(
+                response=rv.get_data(as_text=True) if hasattr(rv, 'get_data') else rv.data,
+                status=rv.status_code,
+                headers=dict(rv.headers) if hasattr(rv, 'headers') else {}
+            )
+        except Exception as e:
+            return {
+                'statusCode': 500,
+                'headers': {'Content-Type': 'text/plain'},
+                'body': f'Server Error: {str(e)}'
+            }
+    
+    resp = {
         'statusCode': response.status_code,
         'headers': dict(response.headers),
         'body': response.get_data(as_text=True)
     }
+    
+    return resp
+
 
 
 
