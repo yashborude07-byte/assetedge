@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "assetedge-final/backend.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "assetedge-final/backend.py"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "assetedge-final/static/$1"
+    }
+  ],
+  "env": {
+    "DB_PATH": "assetedge.db"
+  }
+}
