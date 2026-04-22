@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AssetEdge — Finance Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08080f;--bg2:#0f0f1a;--bg3:#161622;
+  --gold:#c9a84c;--gold2:#e8c87a;--gold-dim:rgba(201,168,76,0.12);
+  --cream:#f0e8d0;--cream2:#b8b09a;--cream3:#6b6358;
+  --green:#4caf88;--red:#c4534a;--blue:#4a7fb5;
+  --border:rgba(201,168,76,0.14);--border2:rgba(240,232,208,0.08);
+  --r:12px;--r2:8px;
+}
+html,body{height:100%;background:var(--bg)}
+body{font-family:'Inter',sans-serif;color:var(--cream);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+.hidden{display:none!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* AUTH */
+#authPage{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.auth-card{width:100%;max-width:420px;padding:40px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);animation:fadeUp .3s ease}
+.auth-logo{font-size:28px;font-weight:700;margin-bottom:4px}.auth-logo span{color:var(--gold)}
+.auth-sub{color:var(--cream3);font-size:13px;margin-bottom:28px}
+.tab-row{display:flex;background:var(--bg3);border-radius:var(--r2);padding:4px;margin-bottom:24px}
+.tab-btn{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;color:var(--cream3);border:none;background:none;transition:.15s}
+.tab-btn.active{background:var(--gold);color:var(--bg)}
+
+/* LAYOUT */
+#appPage{display:none;min-height:100vh}
+#appPage.show{display:flex}
+.sidebar{width:215px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sb-brand{padding:0 18px 20px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.sb-brand h2{font-size:17px;font-weight:700}.sb-brand h2 span{color:var(--gold)}
+.sb-nav{flex:1;padding:0 8px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r2);color:var(--cream2);font-size:13px;font-weight:500;cursor:pointer;transition:.15s;margin-bottom:2px;background:transparent;border:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--gold-dim);color:var(--cream)}.nav-item.active{background:var(--gold-dim);color:var(--gold)}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sb-footer{padding:14px;border-top:1px solid var(--border)}
+.user-tag{font-size:11px;color:var(--cream3)}.user-tag strong{display:block;color:var(--cream2);font-size:12px;margin-bottom:1px}
+.main{margin-left:215px;flex:1;padding:28px;min-height:100vh}
+
+/* HEADERS */
+.ph{margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start}
+.ph h1{font-size:20px;font-weight:700}.ph p{font-size:12px;color:var(--cream3);margin-top:3px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.ct{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--cream3);margin-bottom:6px}
+.cv{font-family:'Space Mono',monospace;font-size:22px;font-weight:700}
+.cv.gold{color:var(--gold2)}.cv.green{color:var(--green)}.cv.red{color:var(--red)}
+.cs{font-size:12px;color:var(--cream3);margin-top:4px}
+.pos{color:var(--green)}.neg{color:var(--red)}
+
+/* GRIDS */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.mb14{margin-bottom:14px}.mb20{margin-bottom:20px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 16px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+.btn-p{background:var(--gold);color:var(--bg)}.btn-p:hover{background:var(--gold2)}
+.btn-g{background:transparent;color:var(--cream2);border:1px solid var(--border2)}.btn-g:hover{background:var(--gold-dim);color:var(--cream)}
+.btn-d{background:rgba(196,83,74,.15);color:var(--red);border:1px solid rgba(196,83,74,.2)}.btn-d:hover{background:rgba(196,83,74,.25)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* FORMS */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--cream3);margin-bottom:6px}
+.fc{width:100%;padding:9px 13px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);color:var(--cream);font-size:13px;font-family:inherit;transition:.15s}
+.fc:focus{outline:none;border-color:var(--gold)}.fc::placeholder{color:var(--cream3)}
+select.fc option{background:var(--bg3)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{color:var(--cream3);font-weight:600;font-size:11px;padding:9px 11px;border-bottom:1px solid var(--border);text-align:left;text-transform:uppercase;letter-spacing:.5px}
+.tbl td{padding:10px 11px;border-bottom:1px solid var(--border2)}
+.tbl tr:last-child td{border-bottom:none}.tbl tr:hover td{background:var(--gold-dim)}
+
+/* BADGE */
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.b-g{background:rgba(76,175,136,.15);color:var(--green)}.b-r{background:rgba(196,83,74,.15);color:var(--red)}
+.b-gold{background:var(--gold-dim);color:var(--gold)}.b-gray{background:rgba(255,255,255,.05);color:var(--cream3)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:26px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:fadeUp .2s ease}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:18px}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* MISC */
+.spinner{border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;width:22px;height:22px;animation:spin .7s linear infinite;margin:40px auto}
+.err{color:var(--red);font-size:13px;margin-bottom:10px}
+.ibox{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--cream2)}
+.pw{background:var(--bg3);border-radius:4px;height:6px}
+.pb{border-radius:4px;height:6px;transition:width .5s}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 2s infinite;margin-right:5px}
+
+/* CHAT */
+.chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.bubble{max-width:82%;padding:11px 15px;border-radius:12px;font-size:13px;line-height:1.7}
+.bubble.user{background:var(--gold-dim);border:1px solid var(--border);align-self:flex-end}
+.bubble.ai{background:var(--bg3);border:1px solid var(--border2);align-self:flex-start}
+.ai-tag{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--gold);text-transform:uppercase;margin-bottom:5px}
+.chat-row{display:flex;gap:9px;padding:14px;border-top:1px solid var(--border)}
+#chatIn{flex:1;padding:11px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--cream);font-size:13px;font-family:inherit;resize:none}
+#chatIn:focus{outline:none;border-color:var(--gold)}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;border-top:1px solid var(--border2)}
+.sugg-btn{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;color:var(--cream2);cursor:pointer;transition:.15s}
+.sugg-btn:hover{background:var(--gold-dim);color:var(--cream)}
+
+@media(max-width:900px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.sidebar{display:none}.main{margin-left:0;padding:16px}.g4,.g3,.g2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authPage">
+  <div class="auth-card">
+    <div class="auth-logo">Asset<span>Edge</span></div>
+    <div class="auth-sub">Private Finance Intelligence</div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('register')">Register</button>
+    </div>
+    <div id="regFields" class="hidden"><div class="fg"><label>Full Name</label><input class="fc" id="regName" placeholder="Your name"></div></div>
+    <div class="fg"><label>Email</label><input class="fc" id="authEmail" type="email" placeholder="you@example.com"></div>
+    <div class="fg"><label>Password</label><input class="fc" id="authPass" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
+    <div id="regExtra" class="hidden">
+      <div class="fg"><label>Monthly Income (₹)</label><input class="fc" id="regIncome" type="number" placeholder="50000"></div>
+      <div class="fg"><label>Occupation</label><input class="fc" id="regOcc" placeholder="Software Engineer"></div>
+    </div>
+    <div class="err hidden" id="authErr"></div>
+    <button class="btn btn-p" style="width:100%" id="authBtn" onclick="doAuth()">Sign In</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPage">
+  <aside class="sidebar">
+    <div class="sb-brand"><h2>Asset<span>Edge</span></h2></div>
+    <nav class="sb-nav" id="sbNav"></nav>
+    <div class="sb-footer">
+      <div class="user-tag"><strong id="sbName">—</strong><span id="sbEmail">—</span></div>
+      <button class="nav-item" style="margin-top:8px;color:var(--red)" onclick="logout()">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out
+      </button>
+    </div>
+  </aside>
+  <main class="main">
+    <div id="dashboardPage"></div>
+    <div id="salaryPage" class="hidden"></div>
+    <div id="budgetPage" class="hidden"></div>
+    <div id="portfolioPage" class="hidden"></div>
+    <div id="goalsPage" class="hidden"></div>
+    <div id="emiPage" class="hidden"></div>
+    <div id="stocksPage" class="hidden"></div>
+    <div id="paymentsPage" class="hidden"></div>
+    <div id="advisorPage" class="hidden"></div>
+  </main>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CORE
+// ═══════════════════════════════════════════
+const API = 'http://localhost:8000';
+let token = localStorage.getItem('ae_tok') || '';
+let user  = JSON.parse(localStorage.getItem('ae_usr') || 'null');
+let chatHist = [];
+let _charts  = {};
+
+function kc(key, el, cfg) {
+  if (_charts[key]) { _charts[key].destroy(); }
+  _charts[key] = new Chart(el, cfg);
+  return _charts[key];
+}
+
+const fmt  = v => '₹' + Number(v||0).toLocaleString('en-IN', {maximumFractionDigits:0});
+const fmtD = v => Number(v||0).toLocaleString('en-IN', {maximumFractionDigits:2});
+
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (res.status === 401) { logout(); return null; }
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({detail:'Error'}));
+    throw new Error(e.detail || 'Request failed');
+  }
+  return res.json();
+}
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg; el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+function modal(html) { document.getElementById('modalRoot').innerHTML = `<div class="overlay" onclick="cm(event)">${html}</div>`; }
+function cm(e) { if (e.target.classList.contains('overlay')) document.getElementById('modalRoot').innerHTML = ''; }
+function cf() { document.getElementById('modalRoot').innerHTML = ''; }
+function sc(t,v,c,s,sc2='') { return `<div class="card"><div class="ct">${t}</div><div class="cv ${c}">${v}</div><div class="cs ${sc2}">${s}</div></div>`; }
+function hbar(label, val, total, color) {
+  const p = total > 0 ? Math.min(100, Math.round(val/total*100)) : 0;
+  return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--cream3)">${label}</span><span style="color:var(--cream2)">${fmt(val)} (${p}%)</span></div><div class="pw"><div class="pb" style="width:${p}%;background:${color}"></div></div></div>`;
+}
+
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('regFields').classList.toggle('hidden', tab==='login');
+  document.getElementById('regExtra').classList.toggle('hidden', tab==='login');
+  document.getElementById('authBtn').setAttribute('data-tab', tab);
+  document.getElementById('authBtn').textContent = tab==='login' ? 'Sign In' : 'Create Account';
+}
+async function doAuth() {
+  const tab = document.getElementById('authBtn').getAttribute('data-tab') || 'login';
+  const email = document.getElementById('authEmail').value.trim();
+  const pw    = document.getElementById('authPass').value;
+  try {
+    let data;
+    if (tab === 'login') {
+      data = await api('/api/auth/login', 'POST', {email, password:pw});
+    } else {
+      data = await api('/api/auth/register', 'POST', {
+        email, password:pw,
+        name: document.getElementById('regName').value.trim(),
+        monthly_income: parseFloat(document.getElementById('regIncome').value)||0,
+        occupation: document.getElementById('regOcc').value
+      });
+    }
+    if (!data?.token) { showErr('authErr','Unexpected response'); return; }
+    token = data.token; user = data.user;
+    localStorage.setItem('ae_tok', token); localStorage.setItem('ae_usr', JSON.stringify(user));
+    initApp();
+  } catch(e) { showErr('authErr', e.message || 'Connection failed — is backend running on port 8000?'); }
+}
+function logout() {
+  token=''; user=null; chatHist=[];
+  localStorage.removeItem('ae_tok'); localStorage.removeItem('ae_usr');
+  document.getElementById('appPage').classList.remove('show');
+  document.getElementById('authPage').classList.remove('hidden');
+  switchTab('login');
+}
+
+// ═══════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════
+const NAVS = [
+  {id:'dashboard',  label:'Dashboard',  ico:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {id:'salary',     label:'Salary',     ico:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>'},
+  {id:'budget',     label:'Budget',     ico:'<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/>'},
+  {id:'portfolio',  label:'Portfolio',  ico:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'goals',      label:'Goals',      ico:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'},
+  {id:'emi',        label:'EMI Loans',  ico:'<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'},
+  {id:'stocks',     label:'Stocks',     ico:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'},
+  {id:'payments',   label:'Payments',   ico:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'},
+  {id:'advisor',    label:'Cleo AI',    ico:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'},
+];
+const PAGES = ['dashboard','salary','budget','portfolio','goals','emi','stocks','payments','advisor'];
+
+function initApp() {
+  document.getElementById('authPage').classList.add('hidden');
+  document.getElementById('appPage').classList.add('show');
+  document.getElementById('sbName').textContent  = user?.name  || 'User';
+  document.getElementById('sbEmail').textContent = user?.email || '';
+  document.getElementById('sbNav').innerHTML = NAVS.map(n =>
+    `<button class="nav-item" onclick="nav('${n.id}')" id="nav-${n.id}"><svg viewBox="0 0 24 24">${n.ico}</svg>${n.label}</button>`
+  ).join('');
+  nav('dashboard');
+}
+
+function nav(page) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('nav-' + page); if (btn) btn.classList.add('active');
+  PAGES.forEach(p => document.getElementById(p+'Page').classList.add('hidden'));
+  document.getElementById(page+'Page').classList.remove('hidden');
+  ({dashboard:renderDash, salary:renderSalary, budget:renderBudget, portfolio:renderPortfolio,
+    goals:renderGoals, emi:renderEMI, stocks:renderStocks, payments:renderPayments, advisor:renderAdvisor})[page]?.();
+}
+
+// ═══════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════
+async function renderDash() {
+  const el = document.getElementById('dashboardPage');
+  el.innerHTML = `<div class="ph"><div><h1>Dashboard</h1><p>Your financial snapshot</p></div></div><div class="spinner"></div>`;
+  const d = await api('/api/dashboard'); if (!d) return;
+  const pR = d.portfolioReturn >= 0, sOk = d.savings >= 0;
+  el.innerHTML = `
+    <div class="ph"><div><h1>Dashboard</h1><p>Your financial snapshot</p></div></div>
+    <div class="g4 mb20">
+      ${sc('Net Income', fmt(d.income), 'gold', 'Monthly take-home')}
+      ${sc('Total EMI', fmt(d.totalEMI), d.emiPercent>40?'red':'', d.emiPercent+'% of income')}
+      ${sc('Portfolio', fmt(d.portfolioValue), '', (pR?'+':'')+fmtD(d.portfolioReturn)+'% return', pR?'pos':'neg')}
+      ${sc('Savings', fmt(d.savings), sOk?'green':'red', d.savingsRate+'% savings rate')}
+    </div>
+    <div class="g2 mb20">
+      <div class="card"><div class="ct mb14">Income Trend</div>
+        ${d.salaryTrend?.length ? '<canvas id="dashChart" height="160"></canvas>' : '<p style="color:var(--cream3);font-size:13px;padding:20px 0;text-align:center">Add salary entries to see trend</p>'}
+      </div>
+      <div class="card"><div class="ct mb14">Financial Health</div>
+        ${hbar('Spent', d.totalSpent, d.income, 'var(--red)')}
+        ${hbar('EMI', d.totalEMI, d.income, 'var(--blue)')}
+        ${hbar('Savings', Math.max(0,d.savings), d.income, 'var(--green)')}
+        <div class="g2" style="margin-top:16px">
+          <div class="ibox"><div style="font-size:11px;color:var(--cream3)">Active Loans</div><div style="font-size:20px;font-weight:700;margin-top:4px">${d.activeLoans}</div></div>
+          <div class="ibox"><div style="font-size:11px;color:var(--cream3)">Active Goals</div><div style="font-size:20px;font-weight:700;margin-top:4px">${d.activeGoals}</div></div>
+        </div>
+      </div>
+    </div>`;
+  if (d.salaryTrend?.length) {
+    kc('dash', document.getElementById('dashChart'), {type:'line', data:{labels:d.salaryTrend.map(s=>s.month), datasets:[{label:'Net Income', data:d.salaryTrend.map(s=>s.net), borderColor:'#c9a84c', backgroundColor:'rgba(201,168,76,0.08)', tension:.4, fill:true, pointBackgroundColor:'#c9a84c', pointRadius:4}]}, options:{responsive:true, plugins:{legend:{display:false}, tooltip:{callbacks:{label:v=>fmt(v.raw)}}}, scales:{x:{grid:{display:false}, ticks:{color:'#6b6358'}}, y:{display:false}}}});
+  }
+}
+
+// ═══════════════════════════════════════════
+//  SALARY
+// ═══════════════════════════════════════════
+async function renderSalary() {
+  const el = document.getElementById('salaryPage');
+  el.innerHTML = `<div class="ph"><div><h1>Salary</h1><p>Track monthly income & deductions</p></div><button class="btn btn-p" onclick="openSalaryModal()">+ Add Entry</button></div><div class="card"><div class="spinner"></div></div>`;
+  const rows = await api('/api/salary'); if (!rows) return;
+  const tbody = rows.map(s => `<tr>
+    <td>${s.month}</td><td>${fmt(s.gross_amount)}</td><td>${fmt(s.tax_deducted)}</td>
+    <td>${fmt(s.pf_contribution)}</td><td>${fmt(s.professional_tax)}</td><td>${fmt(s.other_deductions)}</td>
+    <td style="color:var(--green);font-weight:600">${fmt(s.net_in_hand)}</td>
+    <td><button class="btn btn-d btn-sm" onclick="delSalary(${s.id})">✕</button></td>
+  </tr>`).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--cream3);padding:30px">No salary entries yet</td></tr>`;
+  el.querySelector('.card').innerHTML = `<table class="tbl"><thead><tr><th>Month</th><th>Gross</th><th>Tax</th><th>PF</th><th>Prof Tax</th><th>Other</th><th>Net In Hand</th><th></th></tr></thead><tbody>${tbody}</tbody></table>`;
+}
+function openSalaryModal() {
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>{const d=new Date();d.setMonth(i);return `<option>${m} ${d.getFullYear()}</option>`;}).join('');
+  modal(`<div class="modal" onclick="event.stopPropagation()"><h3>Add Salary Entry</h3>
+    <div class="fg"><label>Month</label><select class="fc" id="sM"><option value="">Select month</option>${mo}</select></div>
+    <div class="fg"><label>Gross Salary (₹)</label><input class="fc" id="sG" type="number" placeholder="0"></div>
+    <div class="fg2"><div class="fg"><label>Tax (₹)</label><input class="fc" id="sT" type="number" placeholder="0"></div><div class="fg"><label>PF (₹)</label><input class="fc" id="sP" type="number" placeholder="0"></div></div>
+    <div class="fg2"><div class="fg"><label>Prof Tax (₹)</label><input class="fc" id="sPT" type="number" placeholder="0"></div><div class="fg"><label>Other (₹)</label><input class="fc" id="sO" type="number" placeholder="0"></div></div>
+    <div class="err hidden" id="salErr"></div>
+    <div class="mf"><button class="btn btn-g" onclick="cf()">Cancel</button><button class="btn btn-p" onclick="saveSalary()">Add Entry</button></div>
+  </div>`);
+}
+async function saveSalary() {
+  const month=document.getElementById('sM').value, gross=+document.getElementById('sG').value;
+  if(!month){showErr('salErr','Please select a month');return;}
+  if(!gross||gross<=0){showErr('salErr','Gross salary must be positive');return;}
+  try{await api('/api/salary','POST',{month,gross_amount:gross,tax_deducted:+document.getElementById('sT').value||0,pf_contribution:+document.getElementById('sP').value||0,professional_tax:+document.getElementById('sPT').value||0,other_deductions:+document.getElementById('sO').value||0});cf();renderSalary();}
+  catch(e){showErr('salErr',e.message);}
+}
+async function delSalary(id){await api('/api/salary/'+id,'DELETE');renderSalary();}
+
+// ═══════════════════════════════════════════
+//  BUDGET
+// ═══════════════════════════════════════════
+const CATS=['Food','Housing','Transport','Entertainment','Shopping','Healthcare','Education','Utilities','Other'];
+const BCOLORS=['#c9a84c','#4caf88','#4a7fb5','#c4534a','#9b59b6','#e67e22','#1abc9c','#e74c3c','#95a5a6'];
+async function renderBudget() {
+  const el = document.getElementById('budgetPage');
+  el.innerHTML = `<div class="ph"><div><h1>Budget</h1><p>Track monthly expenses</p></div><button class="btn btn-p" onclick="openBudgetModal()">+ Add Expense</button></div><div class="spinner"></div>`;
+  const d = await api('/api/budget'); if (!d) return;
+  const hColor = d.health==='critical'?'var(--red)':d.health==='warning'?'var(--gold)':'var(--green)';
+  const pieData = CATS.map((cat,i)=>({name:cat,val:d.budgets.filter(b=>b.category===cat).reduce((s,b)=>s+b.actual_amount,0),color:BCOLORS[i]})).filter(p=>p.val>0);
+  const recent = d.budgets.slice(0,8).map(b=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border2)">
+      <div><div style="font-size:13px">${b.category}</div><div style="font-size:11px;color:var(--cream3)">${b.month||'—'}${b.note?' · '+b.note:''}</div></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--red);font-weight:600">${fmt(b.actual_amount)}</span><button class="btn btn-d btn-sm" onclick="delBudget(${b.id})">✕</button></div>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="ph"><div><h1>Budget</h1><p>Track monthly expenses</p></div><button class="btn btn-p" onclick="openBudgetModal()">+ Add Expense</button></div>
+    <div class="g3 mb20">
+      ${sc('Income', fmt(d.income), 'gold', '')}
+      ${sc('Total Spent', fmt(d.totalSpent), 'red', '')}
+      <div class="card"><div class="ct">Budget Health</div><div class="cv" style="color:${hColor};text-transform:capitalize">${d.health}</div></div>
+    </div>
+    <div class="g2 mb20">
+      <div class="card"><div class="ct mb14">Spending by Category</div>${pieData.length?'<canvas id="budChart" height="220"></canvas>':'<p style="color:var(--cream3);font-size:13px;padding:20px 0;text-align:center">No expenses yet</p>'}</div>
+      <div class="card"><div class="ct mb14">Recent Expenses</div>${recent||'<p style="color:var(--cream3);font-size:13px">No expenses yet</p>'}</div>
+    </div>`;
+  if (pieData.length) {
+    kc('bud', document.getElementById('budChart'), {type:'doughnut', data:{labels:pieData.map(p=>p.name), datasets:[{data:pieData.map(p=>p.val), backgroundColor:pieData.map(p=>p.color), borderWidth:0}]}, options:{responsive:true, plugins:{legend:{position:'bottom',labels:{color:'#b8b09a',font:{size:11}}}, tooltip:{callbacks:{label:v=>v.label+': '+fmt(v.raw)}}}}});
+  }
+}
+function openBudgetModal() {
+  modal(`<div class="modal" onclick="event.stopPropagation()"><h3>Add Expense</h3>
+    <div class="fg"><label>Category</label><select class="fc" id="bC">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div class="fg"><label>Amount (₹)</label><input class="fc" id="bA" type="number" placeholder="0"></div>
+    <div class="fg2"><div class="fg"><label>Planned (₹)</label><input class="fc" id="bP" type="number" placeholder="0"></div><div class="fg"><label>Month</label><input class="fc" id="bM" placeholder="Apr 2025"></div></div>
+    <div class="fg"><label>Note</label><input class="fc" id="bN" placeholder="Optional"></div>
+    <div class="err hidden" id="budErr"></div>
+    <div class="mf"><button class="btn btn-g" onclick="cf()">Cancel</button><button class="btn btn-p" onclick="saveBudget()">Add</button></div>
+  </div>`);
+}
+async function saveBudget() {
+  const amt=+document.getElementById('bA').value;
+  if(!amt||amt<=0){showErr('budErr','Amount must be positive');return;}
+  try{await api('/api/budget/expense','POST',{category:document.getElementById('bC').value,actual_amount:amt,planned_amount:+document.getElementById('bP').value||0,month:document.getElementById('bM').value,note:document.getElementById('bN').value});cf();renderBudget();}
+  catch(e){showErr('budErr',e.message);}
+}
+async function delBudget(id){await api('/api/budget/'+id,'DELETE');renderBudget();}
+
+// ═══════════════════════════════════════════
+//  PORTFOLIO
+// ═══════════════════════════════════════════
+async function renderPortfolio() {
+  const el = document.getElementById('portfolioPage');
+  el.innerHTML = `<div class="ph"><div><h1>Portfolio</h1><p>Live investment holdings</p></div><div style="display:flex;gap:8px"><button class="btn btn-g" id="rfBtn" onclick="doRefreshPrices()">↻ Refresh Prices</button><button class="btn btn-p" onclick="openHoldingModal()">+ Add Holding</button></div></div><div class="spinner"></div>`;
+  const d = await api('/api/portfolio'); if (!d) return;
+  renderPortfolioData(d, el);
+  // Auto-refresh live prices in background
+  if (d.holdings && d.holdings.length > 0) {
+    api('/api/portfolio/live-prices', 'POST')
+      .then(() => api('/api/portfolio'))
+      .then(d2 => { if (d2) renderPortfolioData(d2, el); })
+      .catch(() => {});
+  }
+}
+
+function renderPortfolioData(d, el) {
+  const s = d.summary;
+  // Build sector/type breakdown for pie chart
+  const sectorMap = {};
+  d.holdings.forEach(h => {
+    const key = h.sector || h.type || 'Other';
+    sectorMap[key] = (sectorMap[key] || 0) + (h.current_value || h.invested_value);
+  });
+  const pieLabels = Object.keys(sectorMap);
+  const pieVals   = Object.values(sectorMap);
+  const pieColors = ['#c9a84c','#4caf88','#4a7fb5','#c4534a','#9b59b6','#e67e22','#1abc9c','#e74c3c'];
+
+  const tbody = d.holdings.map(h => `<tr>
+    <td><strong style="color:var(--gold)">${h.symbol}</strong></td>
+    <td style="color:var(--cream3)">${h.name||'—'}</td>
+    <td><span class="badge b-gray">${h.type}</span></td>
+    <td>${h.quantity}</td>
+    <td>${fmt(h.buy_price)}</td>
+    <td style="font-weight:600">${fmt(h.current_price)}</td>
+    <td>${fmt(h.invested_value)}</td>
+    <td class="${h.pnl>=0?'pos':'neg'}">${h.pnl>=0?'+':''}${fmt(h.pnl)}</td>
+    <td class="${h.pnl_percent>=0?'pos':'neg'}">${h.pnl_percent>=0?'+':''}${fmtD(h.pnl_percent)}%</td>
+    <td><button class="btn btn-d btn-sm" onclick="delHolding(${h.id})">✕</button></td>
+  </tr>`).join('') || `<tr><td colspan="10" style="text-align:center;color:var(--cream3);padding:30px">No holdings yet. Add your first holding!</td></tr>`;
+
+  el.innerHTML = `
+    <div class="ph"><div><h1>Portfolio</h1><p>Live investment holdings</p></div><div style="display:flex;gap:8px"><button class="btn btn-g" id="rfBtn" onclick="doRefreshPrices()">↻ Refresh Prices</button><button class="btn btn-p" onclick="openHoldingModal()">+ Add Holding</button></div></div>
+    <div class="g4 mb20">
+      ${sc('Invested', fmt(s.totalInvested), '', '')}
+      ${sc('Current Value', fmt(s.totalCurrent), 'gold', '')}
+      ${sc('P&L', (s.totalPnl>=0?'+':'')+fmt(s.totalPnl), s.totalPnl>=0?'green':'red', '')}
+      ${sc('Return', (s.pnlPercent>=0?'+':'')+fmtD(s.pnlPercent)+'%', s.pnlPercent>=0?'green':'red', '')}
+    </div>
+    <div class="g2 mb20">
+      <div class="card" style="overflow-x:auto">
+        <div class="ct mb14">Holdings</div>
+        <table class="tbl"><thead><tr><th>Symbol</th><th>Name</th><th>Type</th><th>Qty</th><th>Buy</th><th>Current</th><th>Invested</th><th>P&L</th><th>P&L%</th><th></th></tr></thead><tbody>${tbody}</tbody></table>
+      </div>
+      <div class="card">
+        <div class="ct mb14">Allocation by Sector</div>
+        ${pieLabels.length ? '<canvas id="portChart" height="250"></canvas>' : '<p style="color:var(--cream3);font-size:13px;padding:20px 0;text-align:center">Add holdings to see allocation</p>'}
+      </div>
+    </div>`;
+
+  if (pieLabels.length) {
+    kc('port', document.getElementById('portChart'), {
+      type: 'doughnut',
+      data: { labels: pieLabels, datasets: [{ data: pieVals, backgroundColor: pieColors.slice(0, pieLabels.length), borderWidth: 2, borderColor: '#0f0f1a' }] },
+      options: { responsive:true, plugins: { legend:{position:'bottom',labels:{color:'#b8b09a',font:{size:11}}}, tooltip:{callbacks:{label:v=>v.label+': '+fmt(v.raw)}} } }
+    });
+  }
+}
+
+function openHoldingModal() {
+  modal(`<div class="modal" onclick="event.stopPropagation()"><h3>Add Holding</h3>
+    <div class="fg2"><div class="fg"><label>Symbol</label><input class="fc" id="hSym" placeholder="RELIANCE"></div><div class="fg"><label>Name</label><input class="fc" id="hName" placeholder="Reliance Industries"></div></div>
+    <div class="fg2"><div class="fg"><label>Quantity</label><input class="fc" id="hQty" type="number" placeholder="10"></div><div class="fg"><label>Buy Price (₹)</label><input class="fc" id="hBuy" type="number" placeholder="0"></div></div>
+    <div class="fg2"><div class="fg"><label>Current Price (₹) <span style="color:var(--cream3)">(auto)</span></label><input class="fc" id="hCurr" type="number" placeholder="leave blank for live"></div><div class="fg"><label>Buy Date</label><input class="fc" id="hDate" type="date"></div></div>
+    <div class="fg2">
+      <div class="fg"><label>Type</label><select class="fc" id="hType">${['STOCK','MUTUAL_FUND','ETF','BOND','CRYPTO'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div class="fg"><label>Sector</label><select class="fc" id="hSec">${['IT','Banking','Pharma','Auto','FMCG','Energy','Telecom','Infra','Other'].map(s=>`<option>${s}</option>`).join('')}</select></div>
+    </div>
+    <div class="err hidden" id="holdErr"></div>
+    <div class="mf"><button class="btn btn-g" onclick="cf()">Cancel</button><button class="btn btn-p" onclick="saveHolding()">Add Holding</button></div>
+  </div>`);
+}
+async function saveHolding() {
+  const sym=document.getElementById('hSym').value.trim();
+  const qty=+document.getElementById('hQty').value;
+  const bp=+document.getElementById('hBuy').value;
+  if(!sym){showErr('holdErr','Symbol is required');return;}
+  if(!qty||qty<=0){showErr('holdErr','Quantity must be positive');return;}
+  if(!bp||bp<=0){showErr('holdErr','Buy price must be positive');return;}
+  try{
+    const btn=document.querySelector('#holdErr').nextElementSibling?.querySelector('.btn-p');
+    if(btn){btn.textContent='Fetching price…';btn.disabled=true;}
+    await api('/api/portfolio/holdings','POST',{symbol:sym,name:document.getElementById('hName').value,quantity:qty,buy_price:bp,current_price:+document.getElementById('hCurr').value||undefined,buy_date:document.getElementById('hDate').value,type:document.getElementById('hType').value,sector:document.getElementById('hSec').value});
+    cf();renderPortfolio();
+  }catch(e){showErr('holdErr',e.message);}
+}
+async function delHolding(id){await api('/api/portfolio/holdings/'+id,'DELETE');renderPortfolio();}
+async function doRefreshPrices() {
+  const btn=document.getElementById('rfBtn');
+  if(btn){btn.textContent='Refreshing…';btn.disabled=true;}
+  await api('/api/portfolio/live-prices','POST').catch(()=>{});
+  renderPortfolio();
+}
+
+// ═══════════════════════════════════════════
+//  GOALS
+// ═══════════════════════════════════════════
+const FC = {feasible:'var(--green)',stretch:'var(--gold)',infeasible:'var(--red)',completed:'var(--blue)'};
+async function renderGoals() {
+  const el = document.getElementById('goalsPage');
+  el.innerHTML = `<div class="ph"><div><h1>Goals</h1><p>Track your financial goals</p></div><button class="btn btn-p" onclick="openGoalModal()">+ New Goal</button></div><div class="spinner"></div>`;
+  const goals = await api('/api/goals'); if (!goals) return;
+  const cards = goals.length ? goals.map(g => {
+    const p = g.target_amount>0 ? Math.min(100,Math.round(g.saved_amount/g.target_amount*100)) : 0;
+    return `<div class="card" style="border-top:3px solid ${g.color||'var(--gold)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="font-size:26px">${g.icon}</div>
+        <span class="badge" style="background:${FC[g.feasibility]||'var(--green)'}22;color:${FC[g.feasibility]||'var(--green)'}">${g.feasibility}</span>
+      </div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:3px">${g.name}</div>
+      <div style="font-size:12px;color:var(--cream3);margin-bottom:10px">${g.deadline_months} months · ${fmt(g.saved_amount)} of ${fmt(g.target_amount)}</div>
+      <div class="pw" style="margin-bottom:6px"><div class="pb" style="width:${p}%;background:${g.color||'var(--gold)'}"></div></div>
+      <div style="font-size:11px;color:var(--cream3);margin-bottom:14px">${p}% complete</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-g btn-sm" style="flex:1" onclick="openContributeModal(${g.id})">+ Contribute</button>
+        <button class="btn btn-d btn-sm" onclick="delGoal(${g.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--cream3)">No goals yet. Set your first financial goal!</div>`;
+  el.innerHTML = `<div class="ph"><div><h1>Goals</h1><p>Track your financial goals</p></div><button class="btn btn-p" onclick="openGoalModal()">+ New Goal</button></div><div class="g3">${cards}</div>`;
+}
+function openGoalModal(){modal(`<div class="modal" onclick="event.stopPropagation()"><h3>New Goal</h3>
+  <div class="fg"><label>Goal Name</label><input class="fc" id="gN" placeholder="Emergency Fund"></div>
+  <div class="fg"><label>Target Amount (₹)</label><input class="fc" id="gT" type="number" placeholder="100000"></div>
+  <div class="fg2"><div class="fg"><label>Already Saved (₹)</label><input class="fc" id="gS" type="number" placeholder="0"></div><div class="fg"><label>Deadline (months)</label><input class="fc" id="gM" type="number" placeholder="12"></div></div>
+  <div class="fg2"><div class="fg"><label>Icon</label><input class="fc" id="gI" placeholder="🎯" value="🎯"></div><div class="fg"><label>Color</label><input class="fc" id="gC" type="color" value="#c9a84c"></div></div>
+  <div class="err hidden" id="goalErr"></div>
+  <div class="mf"><button class="btn btn-g" onclick="cf()">Cancel</button><button class="btn btn-p" onclick="saveGoal()">Create</button></div>
+</div>`);}
+async function saveGoal(){
+  const name=document.getElementById('gN').value.trim(),target=+document.getElementById('gT').value;
+  if(!name){showErr('goalErr','Name is required');return;}
+  if(!target||target<=0){showErr('goalErr','Target must be positive');return;}
+  try{await api('/api/goals','POST',{name,target_amount:target,saved_amount:+document.getElementById('gS').value||0,deadline_months:+document.getElementById('gM').value||12,icon:document.getElementById('gI').value,color:document.getElementById('gC').value});cf();renderGoals();}
+  catch(e){showErr('goalErr',e.message);}
+}
+function openContributeModal(id){modal(`<div class="modal" onclick="event.stopPropagation()"><h3>Add Contribution</h3>
+  <div class="fg"><label>Amount (₹)</label><input class="fc" id="cA" type="number" placeholder="1000"></div>
+  <div class="mf"><button class="btn btn-g" onclick="cf()">Cancel</button><button class="btn btn-p" onclick="saveContrib(${id})">Add</button></div>
+</div>`);}
+async function saveContrib(id){await api('/api/goals/'+id+'/contribute','PUT',{amount:+document.getElementById('cA').value});cf();renderGoals();}
+async function delGoal(id){await api('/api/goals/'+id,'DELETE');renderGoals();}
+
+// ═══════════════════════════════════════════
+//  EMI
+// ═══════════════════════════════════════════
+async function renderEMI() {
+  const el = document.getElementById('emiPage');
+  el.innerHTML = `
+    <div class="ph"><div><h1>EMI & Loans</h1><p>Calculate EMIs and track loans</p></div></div>
+    <div class="card mb20">
+      <div style="font-size:14px;font-weight:600;margin-bottom:14px">EMI Calculator</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:flex-end">
+        <div class="fg" style="margin-bottom:0"><label>Principal (₹)</label><input class="fc" id="cP" type="number" placeholder="500000"></div>
+        <div class="fg" style="margin-bottom:0"><label>Rate (%/yr)</label><input class="fc" id="cR" type="number" placeholder="8.5"></div>
+        <div class="fg" style="margin-bottom:0"><label>Tenure (months)</label><input class="fc" id="cT" type="number" placeholder="60"></div>
+        <button class="btn btn-p" onclick="calcEMI()">Calculate</button>
+      </div>
+      <div id="calcRes"></div>
+      <div id="emiChartWrap" style="display:none;margin-top:14px"><canvas id="emiChart" height="180"></canvas></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:600">My Loans</div>
+      <button class="btn btn-p btn-sm" onclick="openLoanModal()">+ Add Loan</button>
+    </div>
+    <div class="card"><div class="spinner"></div></div>`;
+  const loans = await api('/api/emi/loans'); if (!loans) return;
+  const tbody = loans.map(l => {
+    const p = l.tenure_months>0 ? Math.round(l.paid_months/l.tenure_months*100) : 0;
+    return `<tr>
+      <td><strong>${l.name}</strong></td><td style="color:var(--cream3)">${l.bank||'—'}</td>
+      <td><span class="badge b-gray">${l.type}</span></td>
+      <td>${fmt(l.principal)}</td><td>${l.interest_rate}%</td>
+      <td style="color:var(--gold);font-weight:600">${fmt(l.emi_amount)}</td>
+      <td style="min-width:120px"><div style="font-size:11px;color:var(--cream3);margin-bottom:3px">${l.paid_months}/${l.tenure_months} (${p}%)</div><div class="pw"><div class="pb" style="width:${p}%;background:var(--green)"></div></div></td>
+      <td><span class="badge ${l.status==='ACTIVE'?'b-g':'b-gray'}">${l.status}</span></td>
+      <td style="display:flex;gap:5px">${l.status==='ACTIVE'?`<button class="btn btn-g btn-sm" onclick="payEMI(${l.id})" title="Mark paid">✓</button>`:''}<button class="btn btn-d btn-sm" onclick="delLoan(${l.id})">✕</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="9" style="text-align:center;color:var(--cream3);padding:30px">No loans yet</td></tr>`;
+  el.querySelector('.card:last-of-type').innerHTML = `<table class="tbl"><thead><tr><th>Name</th><th>Bank</th><th>Type</th><th>Principal</th><th>Rate</th><th>EMI/mo</th><th>Progress</th><th>Status</th><th></th></tr></thead><tbody>${tbody}</tbody></table>`;
+}
+async function calcEMI() {
+  const p=+document.getElementById('cP').value, r=+document.getElementById('cR').value, t=+document.getElementById('cT').value;
+  if(!p||!r||!t) return;
+  const [res,sched] = await Promise.all([api('/api/emi/calculate','POST',{principal:p,interest_rate:r,tenure_months:t}),api('/api/emi/amortization','POST',{principal:p,interest_rate:r,tenure_months:t})]);
+  if(!res) return;
+  document.getElementById('calcRes').innerHTML=`<div class="g3" style="margin-top:16px">${sc('Monthly EMI',fmt(res.emi),'gold','')}${sc('Total Interest',fmt(res.totalInterest),'red','')}${sc('Total Payment',fmt(res.totalPayment),'','')}</div>`;
+  const wrap=document.getElementById('emiChartWrap'); wrap.style.display='block';
+  const labels=sched.schedule.slice(0,Math.min(24,sched.schedule.length)).map(s=>s.month);
+  kc('emi', document.getElementById('emiChart'), {type:'bar',data:{labels,datasets:[{label:'Principal',data:sched.schedule.slice(0,24).map(s=>s.principal),backgroundColor:'rgba(76,175,136,.7)',borderRadius:2},{label:'Interest',data:sched.schedule.slice(0,24).map(s=>s.interest),backgroundColor:'rgba(196,83,74,.7)',borderRadius:2}]},options:{responsive:true,plugins:{legend:{labels:{color:'#b8b09a',font:{size:11}}},tooltip:{callbacks:{label:v=>v.dataset.label+': '+fmt(v.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6b6358',font:{size:10}}},y:{stacked:true,display:false}}}});
+}
+function openLoanModal(){modal(`<div class="modal" onclick="event.stopPropagation()"><h3>Add Loan</h3>
+  <div class="fg2"><div class="fg"><label>Loan Name</label><input class="fc" id="lN" placeholder="Home Loan"></div><div class="fg"><label>Bank / Lender</label><input class="fc" id="lB" placeholder="HDFC Bank"></div></div>
+  <div class="fg"><label>Type</label><select class="fc" id="lT">${['HOME','CAR','PERSONAL','EDUCATION','BUSINESS'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+  <div class="fg2"><div class="fg"><label>Principal (₹)</label><input class="fc" id="lP" type="number" placeholder="0"></div><div class="fg"><label>Rate (%/yr)</label><input class="fc" id="lR" type="number" placeholder="8.5"></div></div>
+  <div class="fg"><label>Tenure (months)</label><input class="fc" id="lTen" type="number" placeholder="60"></div>
+  <div class="err hidden" id="loanErr"></div>
+  <div class="mf"><button class="btn btn-g" onclick="cf()">Cancel</button><button class="btn btn-p" onclick="saveLoan()">Add</button></div>
+</div>`);}
+async function saveLoan(){
+  try{await api('/api/emi/loans','POST',{name:document.getElementById('lN').value,bank:document.getElementById('lB').value,type:document.getElementById('lT').value,principal:+document.getElementById('lP').value,interest_rate:+document.getElementById('lR').value,tenure_months:+document.getElementById('lTen').value});cf();renderEMI();}
+  catch(e){showErr('loanErr',e.message);}
+}
+async function payEMI(id){await api('/api/emi/loans/'+id+'/pay','PUT');renderEMI();}
+async function delLoan(id){await api('/api/emi/loans/'+id,'DELETE');renderEMI();}
+
+// ═══════════════════════════════════════════
+//  STOCKS — Real-time via Yahoo Finance
+// ═══════════════════════════════════════════
+async function renderStocks() {
+  const el = document.getElementById('stocksPage');
+  el.innerHTML = `
+    <div class="ph"><div><h1>Stocks</h1><p><span class="live-dot"></span>Real-time via Yahoo Finance</p></div></div>
+    <div class="card mb20">
+      <div style="display:flex;gap:10px">
+        <input class="fc" id="stkQ" placeholder="Search symbol or company e.g. RELIANCE, TCS, AAPL…" onkeydown="if(event.key==='Enter')searchStocks()">
+        <button class="btn btn-p" onclick="searchStocks()">Search</button>
+      </div>
+      <div id="stkResults" style="margin-top:12px"></div>
+    </div>
+    <div id="stkDetail"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:600">BSE / NSE Blue Chips</div>
+      <span style="font-size:11px;color:var(--cream3)"><span class="live-dot"></span>Live prices</span>
+    </div>
+    <div class="g4" id="mktGrid"><div class="spinner"></div></div>`;
+  loadMarket();
+}
+
+async function loadMarket() {
+  const grid = document.getElementById('mktGrid');
+  if (!grid) return;
+  try {
+    const data = await api('/api/stocks/market');
+    if (!data || !data.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--cream3)"><div style="font-size:32px;margin-bottom:10px">📡</div><div style="font-weight:600;margin-bottom:6px">Market data temporarily unavailable</div><div style="font-size:12px">Search a symbol above e.g. RELIANCE.BO or TCS.NS</div></div>`;
+      return;
+    }
+    grid.innerHTML = data.map(s => {
+      const chg = parseFloat(s.changePct) || 0;
+      const pos = chg >= 0;
+      const hp  = s.price > 0;
+      return `<div class="card" style="cursor:pointer;transition:.15s" onclick="loadQuote('${s.fullSymbol||s.symbol+'.BO'}')" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor=''">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:700;color:var(--gold)">${s.symbol}</div>
+          <div style="font-size:13px;color:${hp?(pos?'var(--green)':'var(--red)'):'var(--cream3)'}">${hp?(pos?'▲':'▼'):'—'}</div>
+        </div>
+        ${s.name?`<div style="font-size:11px;color:var(--cream3);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>`:''}
+        <div style="font-size:18px;font-weight:700;font-family:'Space Mono',monospace;margin:4px 0">${hp?fmt(s.price):'—'}</div>
+        <div style="font-size:12px;color:${pos?'var(--green)':'var(--red)'}">${hp?s.changePct:'No data'}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--cream3)"><div style="font-size:32px;margin-bottom:10px">⚠️</div><div style="font-weight:600">Could not load market data</div><div style="font-size:12px;margin-top:6px">Make sure the backend is running. You can still search symbols above.</div></div>`;
+  }
+}
+
+async function searchStocks() {
+  const kw = document.getElementById('stkQ').value.trim();
+  if (!kw) return;
+  const res = document.getElementById('stkResults');
+  res.innerHTML = '<div class="spinner" style="margin:10px auto;width:16px;height:16px"></div>';
+  try {
+    const data = await api('/api/stocks/search/' + encodeURIComponent(kw));
+    res.innerHTML = data && data.length
+      ? data.map(r => `<button class="btn btn-g btn-sm" style="margin:3px" onclick="loadQuote('${r.symbol}')"><strong style="color:var(--gold)">${r.symbol}</strong> · ${(r.name||'').slice(0,40)}</button>`).join('')
+      : '<span style="color:var(--cream3);font-size:13px">No results found</span>';
+  } catch(e) {
+    res.innerHTML = `<span style="color:var(--red);font-size:13px">${e.message}</span>`;
+  }
+}
+
+async function loadQuote(sym) {
+  const qd = document.getElementById('stkDetail');
+  qd.innerHTML = `<div class="card mb20"><div class="spinner"></div></div>`;
+  try {
+    const [q, id] = await Promise.all([api('/api/stocks/quote/'+sym), api('/api/stocks/intraday/'+sym)]);
+    if (!q || q.error) {
+      qd.innerHTML = `<div class="card mb20" style="color:var(--cream3);text-align:center;padding:30px">Could not load quote for <strong>${sym}</strong>. Try a different symbol.</div>`;
+      return;
+    }
+    const pos = q.change >= 0;
+    const hasIntraday = id?.data?.length > 0;
+    qd.innerHTML = `<div class="card mb20">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div>
+          <div style="font-size:20px;font-weight:700;color:var(--gold)">${q.symbol||sym}</div>
+          ${q.name?`<div style="font-size:12px;color:var(--cream3);margin-top:2px">${q.name}</div>`:''}
+          <div style="font-size:32px;font-weight:700;font-family:'Space Mono',monospace;margin-top:8px">${fmt(q.price)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:600;color:${pos?'var(--green)':'var(--red)'}">${pos?'+':''}${fmt(q.change)} (${q.changePct})</div>
+          <div style="font-size:12px;color:var(--cream3);margin-top:6px">High: ${fmt(q.high)}</div>
+          <div style="font-size:12px;color:var(--cream3)">Low: ${fmt(q.low)}</div>
+          <div style="font-size:12px;color:var(--cream3)">Prev Close: ${fmt(q.prevClose)}</div>
+          <div style="font-size:12px;color:var(--cream3)">Volume: ${Number(q.volume||0).toLocaleString()}</div>
+        </div>
+      </div>
+      ${hasIntraday ? '<canvas id="intChart" height="160"></canvas>' : '<div style="color:var(--cream3);font-size:12px;text-align:center;padding:10px">Intraday chart not available (market may be closed)</div>'}
+    </div>`;
+    if (hasIntraday) {
+      kc('intra', document.getElementById('intChart'), {
+        type:'line',
+        data: { labels: id.data.map(d=>d.time), datasets:[{label:'Price',data:id.data.map(d=>d.close),borderColor:pos?'#4caf88':'#c4534a',backgroundColor:pos?'rgba(76,175,136,0.08)':'rgba(196,83,74,0.08)',tension:.3,fill:true,pointRadius:0,borderWidth:2}] },
+        options: { responsive:true, plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>fmt(v.raw)}}}, scales:{x:{grid:{display:false},ticks:{color:'#6b6358',font:{size:10},maxTicksLimit:8}},y:{display:false}} }
+      });
+    }
+  } catch(e) {
+    qd.innerHTML = `<div class="card mb20" style="color:var(--red);text-align:center;padding:20px">${e.message}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  PAYMENTS
+// ═══════════════════════════════════════════
+async function renderPayments() {
+  const el = document.getElementById('paymentsPage');
+  el.innerHTML = `<div class="ph"><div><h1>Payments</h1><p>Transaction history</p></div><button class="btn btn-p" onclick="openPaymentModal()">+ New Payment</button></div><div class="card"><div class="spinner"></div></div>`;
+  const txns = await api('/api/payments/transactions'); if (!txns) return;
+  const tbody = txns.map(t => `<tr>
+    <td style="color:var(--cream3)">${new Date(t.date).toLocaleDateString('en-IN')}</td>
+    <td>${t.category}</td>
+    <td style="color:var(--cream3)">${t.note||'—'}</td>
+    <td><span class="badge ${t.type==='CREDIT'?'b-g':'b-r'}">${t.type}</span></td>
+    <td style="font-family:'Space Mono',monospace;color:${t.type==='CREDIT'?'var(--green)':'var(--red)'}">${t.type==='CREDIT'?'+':'-'}${fmt(t.amount)}</td>
+  </tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--cream3);padding:30px">No transactions yet</td></tr>`;
+  el.querySelector('.card').innerHTML = `<table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Note</th><th>Type</th><th>Amount</th></tr></thead><tbody>${tbody}</tbody></table>`;
+}
+function openPaymentModal(){modal(`<div class="modal" onclick="event.stopPropagation()"><h3>New Payment</h3>
+  <div class="fg"><label>Amount (₹)</label><input class="fc" id="pA" type="number" placeholder="1000"></div>
+  <div class="fg"><label>Payment For</label><input class="fc" id="pF" placeholder="EMI, Insurance…"></div>
+  <div class="fg2"><div class="fg"><label>Method</label><select class="fc" id="pMeth">${['UPI','CARD','NETBANKING','WALLET','NEFT'].map(m=>`<option>${m}</option>`).join('')}</select></div><div class="fg"><label>Currency</label><select class="fc" id="pCur">${['INR','USD','EUR'].map(c=>`<option>${c}</option>`).join('')}</select></div></div>
+  <div class="fg"><label>Note</label><input class="fc" id="pN" placeholder="Optional"></div>
+  <div id="payRes"></div>
+  <div class="mf"><button class="btn btn-g" onclick="cf()">Cancel</button><button class="btn btn-p" onclick="makePayment()">Pay</button></div>
+</div>`);}
+async function makePayment(){
+  try{
+    const r=await api('/api/payments/intent','POST',{amount:+document.getElementById('pA').value,payment_for:document.getElementById('pF').value,method:document.getElementById('pMeth').value,currency:document.getElementById('pCur').value,note:document.getElementById('pN').value});
+    document.getElementById('payRes').innerHTML=`<div style="margin:12px 0;padding:12px 16px;background:rgba(76,175,136,.1);border:1px solid var(--green);border-radius:8px;font-size:13px"><div style="color:var(--green);font-weight:600;margin-bottom:4px">✓ Payment ${r.status}</div><div>Amount: ${fmt(r.amount)} ${r.currency}</div></div>`;
+    document.querySelector('.mf').innerHTML=`<button class="btn btn-p" onclick="cf();renderPayments()">Done</button>`;
+  }catch(e){alert(e.message);}
+}
+
+// ═══════════════════════════════════════════
+//  AI ADVISOR — OpenAI GPT-4o-mini streaming
+// ═══════════════════════════════════════════
+const SUGGS = ['How is my financial health?','Should I invest or pay off loans?','Tips to improve savings rate','Analyze my portfolio','What is a good EMI-to-income ratio?','How to reach my goals faster?','Best tax saving options in India'];
+
+function renderAdvisor() {
+  const el = document.getElementById('advisorPage');
+  el.style.cssText = 'display:flex;flex-direction:column;height:calc(100vh - 56px)';
+  el.innerHTML = `
+    <div class="ph mb14"><div><h1>🤖 Cleo AI Advisor</h1><p>Powered by OpenAI GPT-4o-mini · Real financial data analysis</p></div>
+      <div class="ibox" style="font-size:11px;max-width:220px">Add <code style="background:var(--bg);padding:1px 4px;border-radius:3px">OPENAI_API_KEY</code> in <code style="background:var(--bg);padding:1px 4px;border-radius:3px">.env</code> to enable full AI. Get key at <strong>platform.openai.com</strong></div>
+    </div>
+    <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0">
+      <div class="chat-body" id="chatBody"></div>
+      <div class="sugg" id="suggWrap">${SUGGS.map(s=>`<button class="sugg-btn" onclick="sendSugg('${s}')">${s}</button>`).join('')}</div>
+      <div class="chat-row">
+        <textarea id="chatIn" rows="1" placeholder="Ask Cleo anything about your finances…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+        <button class="btn btn-p" onclick="sendChat()">➤</button>
+      </div>
+    </div>`;
+  if (!chatHist.length) {
+    chatHist = [{role:'ai', text:"Hi! I'm **Cleo**, your AI financial advisor 👋\n\nI have access to your real financial data and can help with budgeting, investments, EMIs, and wealth-building.\n\nWhat would you like to know?"}];
+  }
+  renderChat();
+}
+
+function renderChat() {
+  const wrap = document.getElementById('chatBody');
+  if (!wrap) return;
+  wrap.innerHTML = chatHist.map(m => `
+    <div class="bubble ${m.role}">
+      ${m.role==='ai' ? '<div class="ai-tag">🤖 Cleo</div>' : ''}
+      <div>${m.text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function sendSugg(text) { document.getElementById('chatIn').value = text; sendChat(); }
+
+async function sendChat() {
+  const input = document.getElementById('chatIn');
+  const msg   = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const sw = document.getElementById('suggWrap');
+  if (sw) sw.style.display = 'none';
+  chatHist.push({role:'user', text: msg});
+  chatHist.push({role:'ai',  text: '●  ●  ●'});
+  renderChat();
+
+  const history = chatHist.slice(0, -2)
+    .filter(m => m.role !== 'system')
+    .slice(-8)
+    .map(m => ({role: m.role==='ai' ? 'assistant' : 'user', content: m.text}));
+
+  // Try streaming first
+  try {
+    const url  = `${API}/api/advisor/stream?message=${encodeURIComponent(msg)}`;
+    const resp = await fetch(url, { headers: {'Authorization': 'Bearer ' + token} });
+    if (!resp.ok) throw new Error('stream failed');
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', full = '';
+    chatHist[chatHist.length-1] = {role:'ai', text:''};
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream: true});
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const chunk = line.slice(6).trim();
+        if (chunk === '[DONE]') break;
+        try {
+          full += JSON.parse(chunk);
+          chatHist[chatHist.length-1] = {role:'ai', text: full};
+          renderChat();
+        } catch(_) {}
+      }
+    }
+    if (!full) throw new Error('empty response');
+  } catch(_) {
+    // Fallback to regular POST
+    try {
+      const res = await api('/api/advisor/chat', 'POST', {message: msg, history});
+      chatHist[chatHist.length-1] = {role:'ai', text: res.reply || 'No response'};
+    } catch(e2) {
+      chatHist[chatHist.length-1] = {role:'ai', text: '⚠️ Could not connect to backend. Make sure it is running on port 8000.'};
+    }
+    renderChat();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════
+document.getElementById('authBtn').setAttribute('data-tab', 'login');
+
+// Backend ping — show warning if down
+fetch(API + '/api/auth/ping')
+  .then(r => r.json())
+  .then(() => console.log('✅ Backend connected'))
+  .catch(() => {
+    const w = document.createElement('div');
+    w.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#c4534a;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;font-family:Inter,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+    w.textContent = '⚠️ Backend not running — start: python backend.py';
+    document.body.appendChild(w);
+    setTimeout(() => w.remove(), 10000);
+  });
+
+if (token && user) {
+  initApp();
+}
+</script>
+</body>
+</html>
